@@ -25,7 +25,7 @@ You should see the installed Java version details if the setup was successful.
 Step-by-Step Instructions:
 Clone the Repository or Copy the Code:
 
-### 1. Clone the repository (https://github.com/Jyrrel/Simple-Banking-Management-Console-Type) or copy the LibraryManagementSystem.java file to your local machine.
+### 1. Clone the repository (https://github.com/Jyrrel/Library-Management-System-Console-Type.git) or copy the LibraryManagementSystem.java file to your local machine.
 
 Navigate to the Project Directory:
 
