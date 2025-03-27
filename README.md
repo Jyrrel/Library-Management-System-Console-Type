@@ -49,7 +49,7 @@ java LibraryManagementSystem
 The program will display a menu allowing you to borrow, return, search, and view books in the library.
 
 Example of Menu and Output:
-<div align="center"> <img width="70%" src="https://github.com/Jyrrel/Simple-Banking-Management-Console-Type/blob/main/Screenshot%202025-03-24%20144857.png"><br><br> </div>
+<div align="center"> <img width="70%" src="Screenshot 2025-03-28 014447.png"><br><br> </div>
 
 # Exiting the Program:
 To exit, simply choose option 5 from the menu, and the program will display "Exiting Library System..." and terminate.
