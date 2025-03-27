@@ -1,121 +1,265 @@
-Josh Gaborne
 import java.util.*;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
+// Enum for Book Categories
+enum Category {
+    GENERAL_WORKS, PHILOSOPHY, RELIGION, SOCIAL_SCIENCES, LANGUAGE, SCIENCE, TECHNOLOGY, ARTS, LITERATURE, HISTORY_GEOGRAPHY
+}
+
+// Book class to store book details
 class Book {
     String title;
-    boolean isAvailable;
-    Date dueDate;
+    String author;
+    Category category;
+    int copies;
+    int issuedCopies;
 
-    public Book(String title) {
+    Book(String title, String author, Category category, int copies) {
         this.title = title;
-        this.isAvailable = true;
-        this.dueDate = null;
+        this.author = author;
+        this.category = category;
+        this.copies = copies;
+        this.issuedCopies = 0;
+    }
+
+    boolean isAvailable() {
+        return (copies - issuedCopies) > 0;
+    }
+
+    void issueBook(int numCopies) {
+        if (isAvailable() && numCopies <= (copies - issuedCopies)) {
+            issuedCopies += numCopies;
+        }
+    }
+
+    void returnBook(int numCopies) {
+        if (issuedCopies >= numCopies) {
+            issuedCopies -= numCopies;
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "Title: " + title + ", Author: " + author + ", Category: " + category + ", Available Copies: " + (copies - issuedCopies);
     }
 }
 
-class Library {
-    private List<Book> books = new ArrayList<>();
-    private Scanner scanner = new Scanner(System.in);
+// BorrowedBook class to track borrowed books
+class BorrowedBook {
+    Book book;
+    int numCopies;
+    LocalDate borrowDate;
+    LocalDate returnDate;
 
-    public void addBook(String title) {
-        books.add(new Book(title));
+    BorrowedBook(Book book, int numCopies, LocalDate borrowDate, int days) {
+        this.book = book;
+        this.numCopies = numCopies;
+        this.borrowDate = borrowDate;
+        this.returnDate = borrowDate.plus(days, ChronoUnit.DAYS);
     }
 
-    public void borrowBook(String title) {
-        for (Book book : books) {
-            if (book.title.equalsIgnoreCase(title) && book.isAvailable) {
-                book.isAvailable = false;
-                Calendar calendar = Calendar.getInstance();
-                calendar.add(Calendar.DAY_OF_MONTH, 7); // Due in 7 days
-                book.dueDate = calendar.getTime();
-                System.out.println("You borrowed: " + book.title);
-                System.out.println("Due date: " + book.dueDate);
-                return;
+    boolean isOverdue() {
+        return LocalDate.now().isAfter(returnDate);
+    }
+
+    @Override
+    public String toString() {
+        return book.title + " (Copies: " + numCopies + ", Due: " + returnDate + (isOverdue() ? " - OVERDUE!" : "") + ")";
+    }
+}
+
+// User class to track borrowed books
+class User {
+    String name;
+    ArrayList<BorrowedBook> borrowedBooks;
+
+    User(String name) {
+        this.name = name;
+        this.borrowedBooks = new ArrayList<>();
+    }
+
+    void listBorrowedBooks() {
+        if (borrowedBooks.isEmpty()) {
+            System.out.println("No books borrowed.");
+        } else {
+            System.out.println("Books you have borrowed:");
+            for (int i = 0; i < borrowedBooks.size(); i++) {
+                BorrowedBook borrowedBook = borrowedBooks.get(i);
+                System.out.println((i + 1) + ". " + borrowedBook);
             }
-        }
-        System.out.println("Book not available or not found.");
-    }
-
-    public void returnBook(String title) {
-        for (Book book : books) {
-            if (book.title.equalsIgnoreCase(title) && !book.isAvailable) {
-                book.isAvailable = true;
-                book.dueDate = null;
-                System.out.println("You returned: " + book.title);
-                return;
-            }
-        }
-        System.out.println("Book not found or not borrowed.");
-    }
-
-    public void searchBook(String title) {
-        for (Book book : books) {
-            if (book.title.equalsIgnoreCase(title)) {
-                System.out.println("Book found: " + book.title);
-                System.out.println("Available: " + (book.isAvailable ? "Yes" : "No"));
-                if (!book.isAvailable) {
-                    System.out.println("Due Date: " + book.dueDate);
-                }
-                return;
-            }
-        }
-        System.out.println("Book not found.");
-    }
-
-    public void showBooks() {
-        System.out.println("Available Books:");
-        for (Book book : books) {
-            System.out.println("- " + book.title + " (Available: " + (book.isAvailable ? "Yes" : "No") + ")");
         }
     }
 }
 
 public class LibraryManagementSystem {
-    public static void main(String[] args) {
-        Library library = new Library();
-        library.addBook("Java Programming");
-        library.addBook("Data Structures");
-        library.addBook("Database Systems");
+    private static final ArrayList<Book> books = new ArrayList<>();
+    private static final HashMap<String, User> users = new HashMap<>();
+    private static final Scanner scanner = new Scanner(System.in);
 
-        Scanner scanner = new Scanner(System.in);
+    public static void main(String[] args) {
+        // Predefined books
+        books.add(new Book("The Catcher in the Rye", "J.D. Salinger", Category.LITERATURE, 5));
+        books.add(new Book("1984", "George Orwell", Category.LITERATURE, 4));
+        books.add(new Book("The Great Gatsby", "F. Scott Fitzgerald", Category.LITERATURE, 3));
+        books.add(new Book("Introduction to Algorithms", "Thomas H. Cormen", Category.SCIENCE, 6));
+        books.add(new Book("Sapiens: A Brief History of Humankind", "Yuval Noah Harari", Category.HISTORY_GEOGRAPHY, 2));
+
         while (true) {
-            System.out.println("\nLibrary Menu:");
-            System.out.println("1. Borrow Book");
-            System.out.println("2. Return Book");
-            System.out.println("3. Search Book");
-            System.out.println("4. Show All Books");
+            System.out.println("\n--- Library Management System ---");
+            System.out.println("1. View Available Books");
+            System.out.println("2. Issue Book");
+            System.out.println("3. Return Book");
+            System.out.println("4. Add New Book");
             System.out.println("5. Exit");
             System.out.print("Choose an option: ");
-
             int choice = scanner.nextInt();
-            scanner.nextLine(); // Consume newline
+            scanner.nextLine(); // consume the newline character
 
             switch (choice) {
-                case 1:
-                    System.out.print("Enter book title to borrow: ");
-                    String borrowTitle = scanner.nextLine();
-                    library.borrowBook(borrowTitle);
-                    break;
-                case 2:
-                    System.out.print("Enter book title to return: ");
-                    String returnTitle = scanner.nextLine();
-                    library.returnBook(returnTitle);
-                    break;
-                case 3:
-                    System.out.print("Enter book title to search: ");
-                    String searchTitle = scanner.nextLine();
-                    library.searchBook(searchTitle);
-                    break;
-                case 4:
-                    library.showBooks();
-                    break;
-                case 5:
-                    System.out.println("Exiting Library System...");
-                    scanner.close();
+                case 1 -> viewAvailableBooks();
+                case 2 -> issueBook();
+                case 3 -> returnBook();
+                case 4 -> addNewBook();
+                case 5 -> {
+                    System.out.println("Exiting Library Management System...");
                     return;
-                default:
-                    System.out.println("Invalid option. Try again.");
+                }
+                default -> System.out.println("Invalid option. Please try again.");
             }
         }
+    }
+
+    private static void viewAvailableBooks() {
+        if (books.isEmpty()) {
+            System.out.println("No books available.");
+            return;
+        }
+        System.out.println("\nAvailable Books:");
+        for (int i = 0; i < books.size(); i++) {
+            Book book = books.get(i);
+            if (book.isAvailable()) {
+                System.out.println((i + 1) + ". " + book);
+            }
+        }
+    }
+
+    private static void issueBook() {
+        System.out.print("Enter your name: ");
+        String userName = scanner.nextLine();
+        users.putIfAbsent(userName, new User(userName));
+        User user = users.get(userName);
+
+        System.out.print("How many books would you like to borrow (max 3 copies per book)? ");
+        int numBooks = scanner.nextInt();
+        scanner.nextLine(); // consume the newline character
+
+        // Issue books
+        for (int i = 0; i < numBooks; i++) {
+            System.out.println("Select a book to borrow:");
+            viewAvailableBooks();
+            System.out.print("Enter book number: ");
+            int bookChoice = scanner.nextInt();
+            scanner.nextLine(); // consume the newline character
+
+            if (bookChoice < 1 || bookChoice > books.size()) {
+                System.out.println("Invalid choice.");
+                return;
+            }
+
+            Book selectedBook = books.get(bookChoice - 1);
+            if (selectedBook.isAvailable()) {
+                System.out.print("Enter the number of copies to borrow (max 3): ");
+                int numCopies = scanner.nextInt();
+                scanner.nextLine(); // consume the newline character
+
+                // Validate number of copies
+                if (numCopies < 1 || numCopies > 3) {
+                    System.out.println("Invalid number of copies. Please choose between 1 and 3.");
+                    return;
+                }
+
+                if (numCopies > (selectedBook.copies - selectedBook.issuedCopies)) {
+                    System.out.println("Not enough copies available.");
+                    return;
+                }
+
+                selectedBook.issueBook(numCopies);
+                BorrowedBook borrowedBook = new BorrowedBook(selectedBook, numCopies, LocalDate.now(), 7); // Default borrow time: 7 days
+                user.borrowedBooks.add(borrowedBook);
+                System.out.println("Book issued successfully! Due date: " + borrowedBook.returnDate);
+            } else {
+                System.out.println("The selected book is not available.");
+            }
+        }
+
+        // List borrowed books after issuing
+        user.listBorrowedBooks();
+    }
+
+    private static void returnBook() {
+        System.out.print("Enter your name: ");
+        String userName = scanner.nextLine();
+        User user = users.get(userName);
+        if (user == null || user.borrowedBooks.isEmpty()) {
+            System.out.println("No books found under your name.");
+            return;
+        }
+
+        System.out.println("Books you have borrowed:");
+        user.listBorrowedBooks();
+
+        System.out.print("Enter the number of the book to return: ");
+        int returnChoice = scanner.nextInt();
+        scanner.nextLine(); // consume the newline character
+
+        if (returnChoice < 1 || returnChoice > user.borrowedBooks.size()) {
+            System.out.println("Invalid choice.");
+            return;
+        }
+
+        BorrowedBook returnedBook = user.borrowedBooks.get(returnChoice - 1);
+        System.out.print("Enter the number of copies to return: ");
+        int returnCopies = scanner.nextInt();
+        scanner.nextLine(); // consume the newline character
+
+        if (returnCopies < 1 || returnCopies > returnedBook.numCopies) {
+            System.out.println("Invalid number of copies to return.");
+            return;
+        }
+
+        returnedBook.book.returnBook(returnCopies);
+        user.borrowedBooks.remove(returnChoice - 1);
+        System.out.println("Book returned successfully!");
+    }
+
+    private static void addNewBook() {
+        System.out.print("Enter book title: ");
+        String title = scanner.nextLine();
+        System.out.print("Enter book author: ");
+        String author = scanner.nextLine();
+
+        System.out.println("Select book category:");
+        for (int i = 0; i < Category.values().length; i++) {
+            System.out.println((i + 1) + ". " + Category.values()[i]);
+        }
+        System.out.print("Enter category number: ");
+        int categoryChoice = scanner.nextInt();
+        scanner.nextLine(); // consume the newline character
+
+        if (categoryChoice < 1 || categoryChoice > Category.values().length) {
+            System.out.println("Invalid category choice.");
+            return;
+        }
+
+        Category category = Category.values()[categoryChoice - 1];
+
+        System.out.print("Enter the number of copies: ");
+        int copies = scanner.nextInt();
+        scanner.nextLine(); // consume the newline character
+
+        Book newBook = new Book(title, author, category, copies);
+        books.add(newBook);
+        System.out.println("New book added successfully!");
     }
 }
