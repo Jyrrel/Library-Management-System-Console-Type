@@ -16,7 +16,7 @@ Features
 6.Interactive Menu: A user-friendly interactive menu for interacting with the system.
 
 ## Prerequisites
-1.Download and Install JDK: Visit the (https://www.oracle.com/java/technologies/downloads/#java11?er=221886) to download the JDK for your operating system (Windows, macOS, or Linux).
+1.Download and Install JDK: Visit the [Download JDK here!](https://www.oracle.com/java/technologies/downloads/#java11?er=221886) to download the JDK for your operating system (Windows, macOS, or Linux).
 
 2.Set up Java Environment: After installing the JDK, make sure you add the JDK's bin directory to your system's PATH environment variable.
 
@@ -29,7 +29,7 @@ You should see the installed Java version details if the setup was successful.
 # How to Run the Library Management System Console
 Step-by-Step Instructions:
 1. Clone the Repository or Copy the Code:
-Clone the repository (https://github.com/Jyrrel/Library-Management-System-Console-Type.git) or copy the LibraryManagementSystem.java file to your local machine.
+Clone the repository [Git Link!](https://github.com/Jyrrel/Library-Management-System-Console-Type.git) or copy the LibraryManagementSystem.java file to your local machine.
 
 2. Navigate to the Project Directory:
 Open your terminal (macOS/Linux) or command prompt (Windows) and navigate to the directory where the LibraryManagementSystem.java file is located.
