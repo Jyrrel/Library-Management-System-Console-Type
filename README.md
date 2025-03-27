@@ -2,23 +2,24 @@
 ## Overview
 This is a simple Library Management System Console built in Java. The program allows users to borrow, return, search, and view books in the library. It uses a command-line interface for interaction and stores information about books, their availability, and due dates.
 
-Features
-1.Add Books: Add books to the library collection.
+## Features
 
-2.Borrow Books: Borrow a book for a period of 7 days, with a due date.
+1. Add Books: Add books to the library collection.
 
-3.Return Books: Return a borrowed book and update its availability.
+2. Borrow Books: Borrow a book for a period of 7 days, with a due date.
 
-4.Search Books: Search for a book in the library by its title and check if it's available or not.
+3. Return Books: Return a borrowed book and update its availability.
 
-5.Show All Books: Display a list of all books in the library along with their availability status.
+4. Search Books: Search for a book in the library by its title and check if it's available or not.
+
+5. Show All Books: Display a list of all books in the library along with their availability status.
 
 6.Interactive Menu: A user-friendly interactive menu for interacting with the system.
 
 ## Prerequisites
-1.Download and Install JDK: Visit the [Download JDK here!](https://www.oracle.com/java/technologies/downloads/#java11?er=221886) to download the JDK for your operating system (Windows, macOS, or Linux).
+1. Download and Install JDK: Visit the [Download JDK here!](https://www.oracle.com/java/technologies/downloads/#java11?er=221886) to download the JDK for your operating system (Windows, macOS, or Linux).
 
-2.Set up Java Environment: After installing the JDK, make sure you add the JDK's bin directory to your system's PATH environment variable.
+2. Set up Java Environment: After installing the JDK, make sure you add the JDK's bin directory to your system's PATH environment variable.
 
 ```bash
 java- version
@@ -29,7 +30,7 @@ You should see the installed Java version details if the setup was successful.
 # How to Run the Library Management System Console
 Step-by-Step Instructions:
 1. Clone the Repository or Copy the Code:
-Clone the repository [Git Link!](https://github.com/Jyrrel/Library-Management-System-Console-Type.git) or copy the LibraryManagementSystem.java file to your local machine.
+Clone the repository [https://github.com/Jyrrel/Library-Management-System-Console-Type.git](https://github.com/Jyrrel/Library-Management-System-Console-Type.git) or copy the LibraryManagementSystem.java file to your local machine.
 
 2. Navigate to the Project Directory:
 Open your terminal (macOS/Linux) or command prompt (Windows) and navigate to the directory where the LibraryManagementSystem.java file is located.
