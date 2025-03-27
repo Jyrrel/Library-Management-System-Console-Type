@@ -45,41 +45,13 @@ class Book {
     }
 }
 
-// BorrowedBook class to track borrowed books
-class BorrowedBook {
-    Book book;
-    int numCopies;
-    LocalDate borrowDate;
-    LocalDate returnDate;
-    String studentName;
-    String studentId;
-
-    BorrowedBook(Book book, int numCopies, LocalDate borrowDate, int days, String studentName, String studentId) {
-        this.book = book;
-        this.numCopies = numCopies;
-        this.borrowDate = borrowDate;
-        this.returnDate = borrowDate.plus(days, ChronoUnit.DAYS);
-        this.studentName = studentName;
-        this.studentId = studentId;
-    }
-
-    boolean isOverdue() {
-        return LocalDate.now().isAfter(returnDate);
-    }
-
-    @Override
-    public String toString() {
-        return "Student: " + studentName + " (ID: " + studentId + "), Book: " + book.title + ", Borrowed on: " + borrowDate + ", Copies: " + numCopies + ", Due date: " + returnDate + (isOverdue() ? " - OVERDUE!" : "");
-    }
-}
-
-// User class to track borrowed books
-class User {
+// Student class to store student details and borrowed books
+class Student {
     String name;
     String studentId;
     ArrayList<BorrowedBook> borrowedBooks;
 
-    User(String name, String studentId) {
+    Student(String name, String studentId) {
         this.name = name;
         this.studentId = studentId;
         this.borrowedBooks = new ArrayList<>();
@@ -98,9 +70,35 @@ class User {
     }
 }
 
+// BorrowedBook class to track borrowed books
+class BorrowedBook {
+    Book book;
+    int numCopies;
+    LocalDate borrowDate;
+    LocalDate returnDate;
+    Student student;
+
+    BorrowedBook(Book book, int numCopies, LocalDate borrowDate, int days, Student student) {
+        this.book = book;
+        this.numCopies = numCopies;
+        this.borrowDate = borrowDate;
+        this.returnDate = borrowDate.plus(days, ChronoUnit.DAYS);
+        this.student = student;
+    }
+
+    boolean isOverdue() {
+        return LocalDate.now().isAfter(returnDate);
+    }
+
+    @Override
+    public String toString() {
+        return "Student: " + student.name + " (ID: " + student.studentId + "), Book: " + book.title + ", Borrowed on: " + borrowDate + ", Copies: " + numCopies + ", Due date: " + returnDate + (isOverdue() ? " - OVERDUE!" : "");
+    }
+}
+
 public class LibraryManagementSystem {
     private static final ArrayList<Book> books = new ArrayList<>();
-    private static final HashMap<String, User> users = new HashMap<>();
+    private static final HashMap<String, Student> students = new HashMap<>();
     private static final ArrayList<BorrowedBook> allBorrowedBooks = new ArrayList<>();
     private static final Scanner scanner = new Scanner(System.in);
 
@@ -121,8 +119,8 @@ public class LibraryManagementSystem {
             System.out.println("5. View All Borrowed Books");
             System.out.println("6. Exit");
             System.out.print("Choose an option: ");
-            int choice = scanner.nextInt();
-            scanner.nextLine(); // consume the newline character
+            
+            int choice = getValidOptionInput(1, 6);  // Added validation for this input
 
             switch (choice) {
                 case 1 -> viewAvailableBooks();
@@ -135,6 +133,22 @@ public class LibraryManagementSystem {
                     return;
                 }
                 default -> System.out.println("Invalid option. Please try again.");
+            }
+        }
+    }
+
+    private static int getValidOptionInput(int min, int max) {
+        int choice;
+        while (true) {
+            try {
+                choice = Integer.parseInt(scanner.nextLine());
+                if (choice >= min && choice <= max) {
+                    return choice;
+                } else {
+                    System.out.println("Invalid option. Please try again and choose a number between " + min + " and " + max + ".");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("You've entered invalid characters. Please try again and choose a number between " + min + " and " + max + ".");
             }
         }
     }
@@ -158,46 +172,57 @@ public class LibraryManagementSystem {
         String userName = scanner.nextLine();
         System.out.print("Enter your student ID: ");
         String studentId = scanner.nextLine();
-        users.putIfAbsent(studentId, new User(userName, studentId));
-        User user = users.get(studentId);
+        students.putIfAbsent(studentId, new Student(userName, studentId));
+        Student student = students.get(studentId);
 
-        System.out.print("How many books would you like to borrow (max 3 copies per book)? ");
-        int numBooks = scanner.nextInt();
-        scanner.nextLine(); // consume the newline character
+        int totalBooksToBorrow;
+        do {
+            System.out.print("How many books would you like to borrow (max 3 copies per book)? ");
+            totalBooksToBorrow = getValidOptionInput(1, 3);  // Validate input for book count
+
+        } while (totalBooksToBorrow <= 0 || totalBooksToBorrow > 3);
 
         // Issue books
-        for (int i = 0; i < numBooks; i++) {
-            System.out.println("Select a book to borrow:");
-            viewAvailableBooks();
-            System.out.print("Enter book number: ");
-            int bookChoice = scanner.nextInt();
-            scanner.nextLine(); // consume the newline character
-
-            if (bookChoice < 1 || bookChoice > books.size()) {
-                System.out.println("Invalid choice.");
-                return;
+        for (int i = 0; i < totalBooksToBorrow; i++) {
+            int bookChoice = -1;
+            while (bookChoice < 1 || bookChoice > books.size()) {
+                System.out.println("Select a book to borrow:");
+                viewAvailableBooks();
+                System.out.print("Enter book number: ");
+                bookChoice = getValidOptionInput(1, books.size());  // Validate book selection input
             }
 
             Book selectedBook = books.get(bookChoice - 1);
             if (selectedBook.isAvailable()) {
-                System.out.print("Enter the number of copies to borrow (max 3): ");
-                int numCopies = scanner.nextInt();
-                scanner.nextLine(); // consume the newline character
-
-                // Validate number of copies
-                if (numCopies < 1 || numCopies > 3) {
-                    System.out.println("Invalid number of copies. Please choose between 1 and 3.");
-                    return;
+                int numCopies;
+                while (true) {
+                    System.out.print("Enter the number of copies to borrow (max 3): ");
+                    try {
+                        numCopies = Integer.parseInt(scanner.nextLine());
+                        if (numCopies < 1 || numCopies > 3) {
+                            System.out.println("Invalid number of copies. Please choose between 1 and 3.");
+                        } else if (numCopies > (selectedBook.copies - selectedBook.issuedCopies)) {
+                            System.out.println("Not enough copies available.");
+                        } else {
+                            break;
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("You've entered invalid characters. Please try again and choose a number between 1 and 3.");
+                    }
                 }
 
-                if (numCopies > (selectedBook.copies - selectedBook.issuedCopies)) {
-                    System.out.println("Not enough copies available.");
-                    return;
+                int borrowDays;
+                while (true) {
+                    System.out.print("Enter the number of days to borrow (max 5 days): ");
+                    borrowDays = getValidOptionInput(1, 5);  // Validate borrow days input
+                    if (borrowDays > 0 && borrowDays <= 5) {
+                        break;
+                    }
                 }
 
                 selectedBook.issueBook(numCopies);
-                BorrowedBook borrowedBook = new BorrowedBook(selectedBook, numCopies, LocalDate.now(), 7, userName, studentId); // Include student ID
-                user.borrowedBooks.add(borrowedBook);
+                BorrowedBook borrowedBook = new BorrowedBook(selectedBook, numCopies, LocalDate.now(), borrowDays, student);
+                student.borrowedBooks.add(borrowedBook);
                 allBorrowedBooks.add(borrowedBook);  // Add to global list of borrowed books
                 System.out.println("Book issued successfully! Due date: " + borrowedBook.returnDate);
             } else {
@@ -206,42 +231,36 @@ public class LibraryManagementSystem {
         }
 
         // List borrowed books after issuing
-        user.listBorrowedBooks();
+        student.listBorrowedBooks();
     }
 
     private static void returnBook() {
         System.out.print("Enter your student ID: ");
         String studentId = scanner.nextLine();
-        User user = users.get(studentId);
-        if (user == null || user.borrowedBooks.isEmpty()) {
+        Student student = students.get(studentId);
+        if (student == null || student.borrowedBooks.isEmpty()) {
             System.out.println("No books found under your student ID.");
             return;
         }
 
         System.out.println("Books you have borrowed:");
-        user.listBorrowedBooks();
+        student.listBorrowedBooks();
 
         System.out.print("Enter the number of the book to return: ");
-        int returnChoice = scanner.nextInt();
-        scanner.nextLine(); // consume the newline character
+        int returnChoice = getValidOptionInput(1, student.borrowedBooks.size());  // Validate return choice input
 
-        if (returnChoice < 1 || returnChoice > user.borrowedBooks.size()) {
-            System.out.println("Invalid choice.");
-            return;
-        }
-
-        BorrowedBook returnedBook = user.borrowedBooks.get(returnChoice - 1);
-        System.out.print("Enter the number of copies to return: ");
-        int returnCopies = scanner.nextInt();
-        scanner.nextLine(); // consume the newline character
-
-        if (returnCopies < 1 || returnCopies > returnedBook.numCopies) {
-            System.out.println("Invalid number of copies to return.");
-            return;
+        BorrowedBook returnedBook = student.borrowedBooks.get(returnChoice - 1);
+        int returnCopies;
+        while (true) {
+            System.out.print("Enter the number of copies to return: ");
+            returnCopies = getValidOptionInput(1, returnedBook.numCopies);  // Validate return copies input
+            if (returnCopies <= returnedBook.numCopies) {
+                break;
+            }
         }
 
         returnedBook.book.returnBook(returnCopies);
-        user.borrowedBooks.remove(returnChoice - 1);
+        student.borrowedBooks.remove(returnChoice - 1);
         allBorrowedBooks.remove(returnChoice - 1);  // Remove from global list
         System.out.println("Book returned successfully!");
     }
@@ -257,19 +276,12 @@ public class LibraryManagementSystem {
             System.out.println((i + 1) + ". " + Category.values()[i]);
         }
         System.out.print("Enter category number: ");
-        int categoryChoice = scanner.nextInt();
-        scanner.nextLine(); // consume the newline character
-
-        if (categoryChoice < 1 || categoryChoice > Category.values().length) {
-            System.out.println("Invalid category choice.");
-            return;
-        }
+        int categoryChoice = getValidOptionInput(1, Category.values().length);  // Validate category choice input
 
         Category category = Category.values()[categoryChoice - 1];
 
         System.out.print("Enter the number of copies: ");
-        int copies = scanner.nextInt();
-        scanner.nextLine(); // consume the newline character
+        int copies = getValidOptionInput(1, Integer.MAX_VALUE);  // Validate number of copies input
 
         Book newBook = new Book(title, author, category, copies);
         books.add(newBook);
