@@ -51,12 +51,16 @@ class BorrowedBook {
     int numCopies;
     LocalDate borrowDate;
     LocalDate returnDate;
+    String studentName;
+    String studentId;
 
-    BorrowedBook(Book book, int numCopies, LocalDate borrowDate, int days) {
+    BorrowedBook(Book book, int numCopies, LocalDate borrowDate, int days, String studentName, String studentId) {
         this.book = book;
         this.numCopies = numCopies;
         this.borrowDate = borrowDate;
         this.returnDate = borrowDate.plus(days, ChronoUnit.DAYS);
+        this.studentName = studentName;
+        this.studentId = studentId;
     }
 
     boolean isOverdue() {
@@ -65,17 +69,19 @@ class BorrowedBook {
 
     @Override
     public String toString() {
-        return book.title + " (Copies: " + numCopies + ", Due: " + returnDate + (isOverdue() ? " - OVERDUE!" : "") + ")";
+        return "Student: " + studentName + " (ID: " + studentId + "), Book: " + book.title + ", Borrowed on: " + borrowDate + ", Copies: " + numCopies + ", Due date: " + returnDate + (isOverdue() ? " - OVERDUE!" : "");
     }
 }
 
 // User class to track borrowed books
 class User {
     String name;
+    String studentId;
     ArrayList<BorrowedBook> borrowedBooks;
 
-    User(String name) {
+    User(String name, String studentId) {
         this.name = name;
+        this.studentId = studentId;
         this.borrowedBooks = new ArrayList<>();
     }
 
@@ -83,7 +89,7 @@ class User {
         if (borrowedBooks.isEmpty()) {
             System.out.println("No books borrowed.");
         } else {
-            System.out.println("Books you have borrowed:");
+            System.out.println("Books borrowed by " + name + ":");
             for (int i = 0; i < borrowedBooks.size(); i++) {
                 BorrowedBook borrowedBook = borrowedBooks.get(i);
                 System.out.println((i + 1) + ". " + borrowedBook);
@@ -95,6 +101,7 @@ class User {
 public class LibraryManagementSystem {
     private static final ArrayList<Book> books = new ArrayList<>();
     private static final HashMap<String, User> users = new HashMap<>();
+    private static final ArrayList<BorrowedBook> allBorrowedBooks = new ArrayList<>();
     private static final Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
@@ -111,7 +118,8 @@ public class LibraryManagementSystem {
             System.out.println("2. Issue Book");
             System.out.println("3. Return Book");
             System.out.println("4. Add New Book");
-            System.out.println("5. Exit");
+            System.out.println("5. View All Borrowed Books");
+            System.out.println("6. Exit");
             System.out.print("Choose an option: ");
             int choice = scanner.nextInt();
             scanner.nextLine(); // consume the newline character
@@ -121,7 +129,8 @@ public class LibraryManagementSystem {
                 case 2 -> issueBook();
                 case 3 -> returnBook();
                 case 4 -> addNewBook();
-                case 5 -> {
+                case 5 -> viewAllBorrowedBooks();
+                case 6 -> {
                     System.out.println("Exiting Library Management System...");
                     return;
                 }
@@ -147,8 +156,10 @@ public class LibraryManagementSystem {
     private static void issueBook() {
         System.out.print("Enter your name: ");
         String userName = scanner.nextLine();
-        users.putIfAbsent(userName, new User(userName));
-        User user = users.get(userName);
+        System.out.print("Enter your student ID: ");
+        String studentId = scanner.nextLine();
+        users.putIfAbsent(studentId, new User(userName, studentId));
+        User user = users.get(studentId);
 
         System.out.print("How many books would you like to borrow (max 3 copies per book)? ");
         int numBooks = scanner.nextInt();
@@ -185,8 +196,9 @@ public class LibraryManagementSystem {
                 }
 
                 selectedBook.issueBook(numCopies);
-                BorrowedBook borrowedBook = new BorrowedBook(selectedBook, numCopies, LocalDate.now(), 7); // Default borrow time: 7 days
+                BorrowedBook borrowedBook = new BorrowedBook(selectedBook, numCopies, LocalDate.now(), 7, userName, studentId); // Include student ID
                 user.borrowedBooks.add(borrowedBook);
+                allBorrowedBooks.add(borrowedBook);  // Add to global list of borrowed books
                 System.out.println("Book issued successfully! Due date: " + borrowedBook.returnDate);
             } else {
                 System.out.println("The selected book is not available.");
@@ -198,11 +210,11 @@ public class LibraryManagementSystem {
     }
 
     private static void returnBook() {
-        System.out.print("Enter your name: ");
-        String userName = scanner.nextLine();
-        User user = users.get(userName);
+        System.out.print("Enter your student ID: ");
+        String studentId = scanner.nextLine();
+        User user = users.get(studentId);
         if (user == null || user.borrowedBooks.isEmpty()) {
-            System.out.println("No books found under your name.");
+            System.out.println("No books found under your student ID.");
             return;
         }
 
@@ -230,6 +242,7 @@ public class LibraryManagementSystem {
 
         returnedBook.book.returnBook(returnCopies);
         user.borrowedBooks.remove(returnChoice - 1);
+        allBorrowedBooks.remove(returnChoice - 1);  // Remove from global list
         System.out.println("Book returned successfully!");
     }
 
@@ -261,5 +274,16 @@ public class LibraryManagementSystem {
         Book newBook = new Book(title, author, category, copies);
         books.add(newBook);
         System.out.println("New book added successfully!");
+    }
+
+    private static void viewAllBorrowedBooks() {
+        if (allBorrowedBooks.isEmpty()) {
+            System.out.println("No books have been borrowed yet.");
+        } else {
+            System.out.println("All Borrowed Books:");
+            for (int i = 0; i < allBorrowedBooks.size(); i++) {
+                System.out.println((i + 1) + ". " + allBorrowedBooks.get(i));
+            }
+        }
     }
 }
