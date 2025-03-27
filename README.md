@@ -16,7 +16,7 @@ Features
 6.Interactive Menu: A user-friendly interactive menu for interacting with the system.
 
 ## Prerequisites
-1.Download and Install JDK: Visit the https://www.oracle.com/java/technologies/downloads/#java11?er=221886 to download the JDK for your operating system (Windows, macOS, or Linux).
+1.Download and Install JDK: Visit the (https://www.oracle.com/java/technologies/downloads/#java11?er=221886) to download the JDK for your operating system (Windows, macOS, or Linux).
 
 2.Set up Java Environment: After installing the JDK, make sure you add the JDK's bin directory to your system's PATH environment variable.
 
