@@ -123,16 +123,26 @@ public class LibraryManagementSystem {
             scanner.nextLine(); // consume the newline character
 
             switch (choice) {
-                case 1 -> viewAvailableBooks();
-                case 2 -> issueBook();
-                case 3 -> returnBook();
-                case 4 -> addNewBook();
-                case 5 -> viewAllBorrowedBooks();
-                case 6 -> {
+                case 1: 
+                    viewAvailableBooks();
+                    break;
+                case 2: 
+                    issueBook();
+                    break;
+                case 3: 
+                    returnBook();
+                    break;
+                case 4: 
+                    addNewBook();
+                    break;
+                case 5: 
+                    viewAllBorrowedBooks();
+                    break;
+                case 6: {
                     System.out.println("Exiting Library Management System...");
                     return;
                 }
-                default -> System.out.println("Invalid option. Please try again.");
+                default: System.out.println("Invalid option. Please try again.");
             }
         }
     }
@@ -178,15 +188,15 @@ public class LibraryManagementSystem {
         students.putIfAbsent(studentId, new Student(userName, studentId));
         Student student = students.get(studentId);
 
-        // Calculate the total available copies of all books in the library
-        int totalAvailableCopies = 0;
-        for (Book book : books) {
-            totalAvailableCopies += (book.copies - book.issuedCopies);
+        // Check if the student already borrowed 3 books
+        if (student.borrowedBooks.size() >= 3) {
+            System.out.println("You have already borrowed 3 books. You cannot borrow more.");
+            return;
         }
 
         // Issue books
         while (true) {
-            System.out.print("Enter the total number of books you want to borrow: ");
+            System.out.print("Enter the number of books you want to borrow (max 3): ");
             int totalBooksToBorrow = 0;
             try {
                 totalBooksToBorrow = Integer.parseInt(scanner.nextLine());
@@ -195,13 +205,12 @@ public class LibraryManagementSystem {
                 continue;
             }
 
+            // Prevent borrowing more than 3 books
             if (totalBooksToBorrow <= 0) {
                 System.out.println("You cannot borrow zero or negative copies. Please try again.");
-            } else if (totalBooksToBorrow > totalAvailableCopies) {
-                System.out.println("Oops! You've entered an amount that exceeds the total available books in the library. There are only " + totalAvailableCopies + " books available.");
+            } else if (totalBooksToBorrow + student.borrowedBooks.size() > 3) {
+                System.out.println("You can borrow only up to 3 books. You already have " + student.borrowedBooks.size() + " book(s) borrowed.");
             } else {
-                int totalCopiesRequested = 0;
-
                 for (int i = 0; i < totalBooksToBorrow; i++) {
                     int bookChoice = -1;
                     while (bookChoice < 1 || bookChoice > books.size()) {
@@ -230,7 +239,6 @@ public class LibraryManagementSystem {
                                 } else if (numCopies > (selectedBook.copies - selectedBook.issuedCopies)) {
                                     System.out.println("You have entered more copies than available. There are only " + (selectedBook.copies - selectedBook.issuedCopies) + " copies available. Please enter a valid number.");
                                 } else {
-                                    totalCopiesRequested += numCopies;
                                     break; // exit the loop if valid input is entered
                                 }
                             } catch (NumberFormatException e) {
@@ -274,56 +282,46 @@ public class LibraryManagementSystem {
     }
 
     private static void returnBook() {
-        // Validate student ID to ensure only the specified format (XX-XXXX-XXXXXX) is entered
-        String studentId = "";
-        while (true) {
-            System.out.print("Enter your student ID (e.g., 02-2425-016386): ");
-            studentId = scanner.nextLine();
-            if (studentId.matches("\\d{2}-\\d{4}-\\d{6}")) { // Pattern matches the format XX-XXXX-XXXXXX
-                break;
-            } else {
-                System.out.println("Invalid student ID format. Please use the format XX-XXXX-XXXXXX.");
-            }
-        }
+        System.out.print("Enter your student ID: ");
+        String studentId = scanner.nextLine();
 
         Student student = students.get(studentId);
-        if (student == null || student.borrowedBooks.isEmpty()) {
-            System.out.println("No books found under your student ID.");
+        if (student == null) {
+            System.out.println("Student not found.");
             return;
         }
 
-        System.out.println("Books you have borrowed:");
         student.listBorrowedBooks();
 
-        System.out.print("Enter the number of the book to return: ");
-        int returnChoice = scanner.nextInt();
-        scanner.nextLine(); // consume the newline character
-
-        if (returnChoice < 1 || returnChoice > student.borrowedBooks.size()) {
-            System.out.println("Invalid choice.");
+        if (student.borrowedBooks.isEmpty()) {
+            System.out.println("You have no books to return.");
             return;
         }
 
-        BorrowedBook returnedBook = student.borrowedBooks.get(returnChoice - 1);
-        int returnCopies;
-        while (true) {
-            System.out.print("Enter the number of copies to return: ");
-            returnCopies = scanner.nextInt();
-            scanner.nextLine(); // consume the newline character
+        System.out.print("Enter the number of the book you want to return: ");
+        int bookIndex = scanner.nextInt();
+        scanner.nextLine(); // consume the newline character
 
-            if (returnCopies < 1 || returnCopies > returnedBook.numCopies) {
-                System.out.println("Invalid number of copies to return.");
-            } else if (returnCopies > returnedBook.numCopies) {
-                System.out.println("You cannot return more copies than you have borrowed.");
-            } else {
-                break; // exit the loop if valid input is entered
-            }
+        if (bookIndex < 1 || bookIndex > student.borrowedBooks.size()) {
+            System.out.println("Invalid book number. Please try again.");
+            return;
         }
 
-        returnedBook.book.returnBook(returnCopies);
-        student.borrowedBooks.remove(returnChoice - 1);
-        allBorrowedBooks.remove(returnChoice - 1);  // Remove from global list
-        System.out.println("Book returned successfully!");
+        BorrowedBook borrowedBook = student.borrowedBooks.get(bookIndex - 1);
+        Book book = borrowedBook.book;
+
+        System.out.print("Enter the number of copies to return: ");
+        int copiesToReturn = scanner.nextInt();
+        scanner.nextLine(); // consume the newline character
+
+        if (copiesToReturn <= 0 || copiesToReturn > borrowedBook.numCopies) {
+            System.out.println("Invalid number of copies. Please try again.");
+            return;
+        }
+
+        book.returnBook(copiesToReturn);
+        student.borrowedBooks.remove(borrowedBook);
+        System.out.println("Book returned successfully.");
     }
 
     private static void addNewBook() {
@@ -331,19 +329,16 @@ public class LibraryManagementSystem {
         String title = scanner.nextLine();
         System.out.print("Enter the author: ");
         String author = scanner.nextLine();
-        System.out.println("Select category:");
-        for (Category category : Category.values()) {
-            System.out.println(category.ordinal() + 1 + ". " + category);
-        }
-        System.out.print("Enter category number: ");
+        System.out.print("Enter the book category (1. GENERAL_WORKS, 2. PHILOSOPHY, 3. RELIGION, 4. SOCIAL_SCIENCES, 5. LANGUAGE, 6. SCIENCE, 7. TECHNOLOGY, 8. ARTS, 9. LITERATURE, 10. HISTORY_GEOGRAPHY): ");
         int categoryChoice = scanner.nextInt();
         scanner.nextLine(); // consume the newline character
         Category category = Category.values()[categoryChoice - 1];
         System.out.print("Enter the number of copies: ");
         int copies = scanner.nextInt();
         scanner.nextLine(); // consume the newline character
+
         books.add(new Book(title, author, category, copies));
-        System.out.println("Book added successfully!");
+        System.out.println("New book added successfully.");
     }
 
     private static void viewAllBorrowedBooks() {
