@@ -4,17 +4,32 @@ This is a simple Library Management System Console built in Java. The program al
 
 ## Features
 
-1. Add Books: Add books to the library collection.
+### View Available Books:
+ * Displays a list of all books currently available in the library along with their details and available copies.
 
-2. Borrow Books: Borrow a book for a period of 7 days, with a due date.
+### Issue Books:
+* Students can borrow up to 3 books at a time.
+* Borrowing is limited to a maximum of 5 days per book.
+* Validates name and student ID format (XX-XXXX-XXXXXX).
+* Checks book availability and prevents borrowing more copies than available.
 
-3. Return Books: Return a borrowed book and update its availability.
+### Return Books:
+* Students can return borrowed books and specify how many copies they are returning.
+* Updates the book’s availability accordingly.
+* Prevents returning more copies than borrowed.
 
-4. Search Books: Search for a book in the library by its title and check if it's available or not.
+###  Add New Books: 
+*  Allows users to add new books by providing a title, author, category, and number of copies.
 
-5. Show All Books: Display a list of all books in the library along with their availability status.
+ ### View All Borrowed Books:
+* Displays all books currently borrowed by all students.
+* Highlights overdue books with a clear “OVERDUE!” warning.
 
-6.Interactive Menu: A user-friendly interactive menu for interacting with the system.
+### Student Borrow History:
+* Each student can view their borrowed books along with borrow date and due date.
+
+ ###  Interactive Console Menu: 
+* A menu-driven interface for easy interaction with the system via terminal.
 
 ## Prerequisites
 1. Download and Install JDK: Visit the [Download JDK here!](https://www.oracle.com/java/technologies/downloads/#java11?er=221886) to download the JDK for your operating system (Windows, macOS, or Linux).
