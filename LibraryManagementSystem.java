@@ -23,6 +23,7 @@ class Book {
         this.issuedCopies = 0;
     }
 
+
     boolean isAvailable() {
         return (copies - issuedCopies) > 0;
     }
