@@ -117,9 +117,7 @@ public class LibraryManagementSystem {
             System.out.println("4. Add New Book");
             System.out.println("5. View All Borrowed Books");
             System.out.println("6. Exit");
-            System.out.println("7. Search Book by Title");
-            System.out.println("8. View All Students");
-            System.out.println("9. Exit");
+            System.out.println("7. View All Students");
             System.out.print("Choose an option: ");
             int choice = scanner.nextInt();
             scanner.nextLine();
@@ -131,9 +129,7 @@ public class LibraryManagementSystem {
                 case 4: addNewBook(); break;
                 case 5: viewAllBorrowedBooks(); break;
                 case 6: System.out.println("Exiting Library Management System..."); return;
-                case 7: searchBookByTitle(); break;
-                case 8: viewAllStudents(); break;
-                case 9: System.out.println("Exiting Library Management System..."); return;
+                case 7: viewAllStudents(); break;
                 default: System.out.println("Invalid option. Please try again.");
             }
         }
@@ -201,27 +197,10 @@ public class LibraryManagementSystem {
         if (overdueDays > 0) {
             int fine = (int) overdueDays * 10;
             System.out.println("This book is overdue by " + overdueDays + " day(s).");
-            System.out.println("Please pay a fine of \u20B1" + fine + ".");
+            System.out.println("Please pay a fine of ₱" + fine + ".");
         }
 
         System.out.println("Book returned successfully.");
-    }
-
-    private static void searchBookByTitle() {
-        System.out.print("Enter book title keyword to search: ");
-        String keyword = scanner.nextLine().toLowerCase();
-        boolean found = false;
-
-        for (Book book : books) {
-            if (book.title.toLowerCase().contains(keyword)) {
-                System.out.println(book);
-                found = true;
-            }
-        }
-
-        if (!found) {
-            System.out.println("No books found with the given title keyword.");
-        }
     }
 
     private static void viewAllStudents() {
@@ -236,8 +215,6 @@ public class LibraryManagementSystem {
             System.out.println();
         }
     }
-
-    // Existing methods: issueBook, addNewBook, viewAllBorrowedBooks remain unchanged
 
     private static void addNewBook() {
         System.out.print("Enter the book title: ");
@@ -267,8 +244,53 @@ public class LibraryManagementSystem {
         }
     }
 
-    // Keep the full issueBook method as before
     private static void issueBook() {
-        // unchanged
+        System.out.print("Enter your name: ");
+        String name = scanner.nextLine();
+        System.out.print("Enter your student ID: ");
+        String studentId = scanner.nextLine();
+
+        Student student = students.get(studentId);
+        if (student == null) {
+            student = new Student(name, studentId);
+            students.put(studentId, student);
+        }
+
+        viewAvailableBooks();
+        System.out.print("Enter the number of the book to borrow: ");
+        int bookIndex = scanner.nextInt();
+        scanner.nextLine();
+
+        if (bookIndex < 1 || bookIndex > books.size()) {
+            System.out.println("Invalid book selection.");
+            return;
+        }
+
+        Book selectedBook = books.get(bookIndex - 1);
+
+        if (!selectedBook.isAvailable()) {
+            System.out.println("This book is currently not available.");
+            return;
+        }
+
+        System.out.print("Enter number of copies to borrow: ");
+        int numCopies = scanner.nextInt();
+        scanner.nextLine();
+
+        if (numCopies <= 0 || numCopies > (selectedBook.copies - selectedBook.issuedCopies)) {
+            System.out.println("Invalid number of copies.");
+            return;
+        }
+
+        System.out.print("Enter number of days to borrow: ");
+        int days = scanner.nextInt();
+        scanner.nextLine();
+
+        selectedBook.issueBook(numCopies);
+        BorrowedBook borrowedBook = new BorrowedBook(selectedBook, numCopies, LocalDate.now(), days, student);
+        student.borrowedBooks.add(borrowedBook);
+        allBorrowedBooks.add(borrowedBook);
+
+        System.out.println("Book issued successfully!");
     }
 }
