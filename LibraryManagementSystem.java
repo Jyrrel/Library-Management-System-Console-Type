@@ -116,8 +116,8 @@ public class LibraryManagementSystem {
             System.out.println("3. Return Book");
             System.out.println("4. Add New Book");
             System.out.println("5. View All Borrowed Books");
-            System.out.println("6. Exit");
-            System.out.println("7. View All Students");
+            System.out.println("6. View All Students");
+            System.out.println("7. Exit");
             System.out.print("Choose an option: ");
             int choice = scanner.nextInt();
             scanner.nextLine();
@@ -128,8 +128,8 @@ public class LibraryManagementSystem {
                 case 3: returnBook(); break;
                 case 4: addNewBook(); break;
                 case 5: viewAllBorrowedBooks(); break;
-                case 6: System.out.println("Exiting Library Management System..."); return;
-                case 7: viewAllStudents(); break;
+                case 6: viewAllStudents(); break;
+                case 7: System.out.println("Exiting Library Management System..."); return;
                 default: System.out.println("Invalid option. Please try again.");
             }
         }
