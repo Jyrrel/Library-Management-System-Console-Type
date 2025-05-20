@@ -9,11 +9,11 @@ enum Category {
 
 // Book class to store book details
 class Book {
-    String title;
-    String author;
-    Category category;
-    int copies;
-    int issuedCopies;
+    private final String title;
+    private final String author;
+    private final Category category;
+    private final int copies;
+    private int issuedCopies;
 
     Book(String title, String author, Category category, int copies) {
         this.title = title;
@@ -39,17 +39,25 @@ class Book {
         }
     }
 
+    int getAvailableCopies() {
+        return copies - issuedCopies;
+    }
+
+    String getTitle() {
+        return title;
+    }
+
     @Override
     public String toString() {
-        return "Title: " + title + ", Author: " + author + ", Category: " + category + ", Available Copies: " + (copies - issuedCopies);
+        return "Title: " + title + ", Author: " + author + ", Category: " + category + ", Available Copies: " + getAvailableCopies();
     }
 }
 
 // Student class to store student details and borrowed books
 class Student {
-    String name;
-    String studentId;
-    ArrayList<BorrowedBook> borrowedBooks;
+    final String name;
+    final String studentId;
+    final ArrayList<BorrowedBook> borrowedBooks;
 
     Student(String name, String studentId) {
         this.name = name;
@@ -72,11 +80,11 @@ class Student {
 
 // BorrowedBook class to track borrowed books
 class BorrowedBook {
-    Book book;
-    int numCopies;
-    LocalDate borrowDate;
-    LocalDate returnDate;
-    Student student;
+    final Book book;
+    final int numCopies;
+    final LocalDate borrowDate;
+    final LocalDate returnDate;
+    final Student student;
 
     BorrowedBook(Book book, int numCopies, LocalDate borrowDate, int days, Student student) {
         this.book = book;
@@ -92,7 +100,9 @@ class BorrowedBook {
 
     @Override
     public String toString() {
-        return "Student: " + student.name + " (ID: " + student.studentId + "), Book: " + book.title + ", Borrowed on: " + borrowDate + ", Copies: " + numCopies + ", Due date: " + returnDate + (isOverdue() ? " - OVERDUE!" : "");
+        return "Student: " + student.name + " (ID: " + student.studentId + "), Book: " + book.getTitle()
+                + ", Borrowed on: " + borrowDate + ", Copies: " + numCopies + ", Due date: " + returnDate
+                + (isOverdue() ? " - OVERDUE!" : "");
     }
 }
 
@@ -101,6 +111,7 @@ public class LibraryManagementSystem {
     private static final HashMap<String, Student> students = new HashMap<>();
     private static final ArrayList<BorrowedBook> allBorrowedBooks = new ArrayList<>();
     private static final Scanner scanner = new Scanner(System.in);
+    private static final int FINE_PER_DAY = 10;
 
     public static void main(String[] args) {
         books.add(new Book("The Catcher in the Rye", "J.D. Salinger", Category.LITERATURE, 5));
@@ -119,9 +130,8 @@ public class LibraryManagementSystem {
             System.out.println("6. View All Students");
             System.out.println("7. Exit");
             System.out.print("Choose an option: ");
-            int choice = scanner.nextInt();
-            scanner.nextLine();
 
+            int choice = getIntInput();
             switch (choice) {
                 case 1: viewAvailableBooks(); break;
                 case 2: issueBook(); break;
@@ -129,8 +139,11 @@ public class LibraryManagementSystem {
                 case 4: addNewBook(); break;
                 case 5: viewAllBorrowedBooks(); break;
                 case 6: viewAllStudents(); break;
-                case 7: System.out.println("Exiting Library Management System..."); return;
-                default: System.out.println("Invalid option. Please try again.");
+                case 7:
+                    System.out.println("Exiting Library Management System...");
+                    return;
+                default:
+                    System.out.println("Invalid option. Please try again.");
             }
         }
     }
@@ -146,7 +159,7 @@ public class LibraryManagementSystem {
             Book book = books.get(i);
             if (book.isAvailable()) {
                 System.out.println((i + 1) + ". " + book);
-                totalAvailableBooks += (book.copies - book.issuedCopies);
+                totalAvailableBooks += book.getAvailableCopies();
             }
         }
         System.out.println("Total Available Books: " + totalAvailableBooks);
@@ -154,7 +167,7 @@ public class LibraryManagementSystem {
 
     private static void returnBook() {
         System.out.print("Enter your student ID: ");
-        String studentId = scanner.nextLine();
+        String studentId = scanner.nextLine().trim();
 
         Student student = students.get(studentId);
         if (student == null) {
@@ -163,18 +176,13 @@ public class LibraryManagementSystem {
         }
 
         student.listBorrowedBooks();
-
-        if (student.borrowedBooks.isEmpty()) {
-            System.out.println("You have no books to return.");
-            return;
-        }
+        if (student.borrowedBooks.isEmpty()) return;
 
         System.out.print("Enter the number of the book you want to return: ");
-        int bookIndex = scanner.nextInt();
-        scanner.nextLine();
+        int bookIndex = getIntInput();
 
         if (bookIndex < 1 || bookIndex > student.borrowedBooks.size()) {
-            System.out.println("Invalid book number. Please try again.");
+            System.out.println("Invalid book number.");
             return;
         }
 
@@ -182,11 +190,10 @@ public class LibraryManagementSystem {
         Book book = borrowedBook.book;
 
         System.out.print("Enter the number of copies to return: ");
-        int copiesToReturn = scanner.nextInt();
-        scanner.nextLine();
+        int copiesToReturn = getIntInput();
 
         if (copiesToReturn <= 0 || copiesToReturn > borrowedBook.numCopies) {
-            System.out.println("Invalid number of copies. Please try again.");
+            System.out.println("Invalid number of copies.");
             return;
         }
 
@@ -195,7 +202,7 @@ public class LibraryManagementSystem {
 
         long overdueDays = ChronoUnit.DAYS.between(borrowedBook.returnDate, LocalDate.now());
         if (overdueDays > 0) {
-            int fine = (int) overdueDays * 10;
+            int fine = (int) overdueDays * FINE_PER_DAY;
             System.out.println("This book is overdue by " + overdueDays + " day(s).");
             System.out.println("Please pay a fine of ₱" + fine + ".");
         }
@@ -218,16 +225,38 @@ public class LibraryManagementSystem {
 
     private static void addNewBook() {
         System.out.print("Enter the book title: ");
-        String title = scanner.nextLine();
+        String title = scanner.nextLine().trim();
+        if (title.isEmpty()) {
+            System.out.println("Title cannot be empty.");
+            return;
+        }
+
         System.out.print("Enter the author: ");
-        String author = scanner.nextLine();
-        System.out.print("Enter the book category (1. GENERAL_WORKS, 2. PHILOSOPHY, 3. RELIGION, 4. SOCIAL_SCIENCES, 5. LANGUAGE, 6. SCIENCE, 7. TECHNOLOGY, 8. ARTS, 9. LITERATURE, 10. HISTORY_GEOGRAPHY): ");
-        int categoryChoice = scanner.nextInt();
-        scanner.nextLine();
+        String author = scanner.nextLine().trim();
+        if (author.isEmpty()) {
+            System.out.println("Author cannot be empty.");
+            return;
+        }
+
+        System.out.println("Enter the book category:");
+        for (int i = 0; i < Category.values().length; i++) {
+            System.out.println((i + 1) + ". " + Category.values()[i]);
+        }
+
+        int categoryChoice = getIntInput();
+        if (categoryChoice < 1 || categoryChoice > Category.values().length) {
+            System.out.println("Invalid category.");
+            return;
+        }
+
         Category category = Category.values()[categoryChoice - 1];
         System.out.print("Enter the number of copies: ");
-        int copies = scanner.nextInt();
-        scanner.nextLine();
+        int copies = getIntInput();
+
+        if (copies <= 0) {
+            System.out.println("Number of copies must be positive.");
+            return;
+        }
 
         books.add(new Book(title, author, category, copies));
         System.out.println("New book added successfully.");
@@ -246,20 +275,25 @@ public class LibraryManagementSystem {
 
     private static void issueBook() {
         System.out.print("Enter your name: ");
-        String name = scanner.nextLine();
-        System.out.print("Enter your student ID: ");
-        String studentId = scanner.nextLine();
-
-        Student student = students.get(studentId);
-        if (student == null) {
-            student = new Student(name, studentId);
-            students.put(studentId, student);
+        String name = scanner.nextLine().trim();
+        if (name.isEmpty()) {
+            System.out.println("Name cannot be empty.");
+            return;
         }
+
+        System.out.print("Enter your student ID: ");
+        String studentId = scanner.nextLine().trim();
+        if (studentId.isEmpty()) {
+            System.out.println("Student ID cannot be empty.");
+            return;
+        }
+
+        Student student = students.getOrDefault(studentId, new Student(name, studentId));
+        students.putIfAbsent(studentId, student);
 
         viewAvailableBooks();
         System.out.print("Enter the number of the book to borrow: ");
-        int bookIndex = scanner.nextInt();
-        scanner.nextLine();
+        int bookIndex = getIntInput();
 
         if (bookIndex < 1 || bookIndex > books.size()) {
             System.out.println("Invalid book selection.");
@@ -274,17 +308,20 @@ public class LibraryManagementSystem {
         }
 
         System.out.print("Enter number of copies to borrow: ");
-        int numCopies = scanner.nextInt();
-        scanner.nextLine();
+        int numCopies = getIntInput();
 
-        if (numCopies <= 0 || numCopies > (selectedBook.copies - selectedBook.issuedCopies)) {
+        if (numCopies <= 0 || numCopies > selectedBook.getAvailableCopies()) {
             System.out.println("Invalid number of copies.");
             return;
         }
 
         System.out.print("Enter number of days to borrow: ");
-        int days = scanner.nextInt();
-        scanner.nextLine();
+        int days = getIntInput();
+
+        if (days <= 0) {
+            System.out.println("Borrow duration must be positive.");
+            return;
+        }
 
         selectedBook.issueBook(numCopies);
         BorrowedBook borrowedBook = new BorrowedBook(selectedBook, numCopies, LocalDate.now(), days, student);
@@ -292,5 +329,18 @@ public class LibraryManagementSystem {
         allBorrowedBooks.add(borrowedBook);
 
         System.out.println("Book issued successfully!");
+    }
+
+    private static int getIntInput() {
+        while (true) {
+            try {
+                int input = scanner.nextInt();
+                scanner.nextLine(); // Consume newline
+                return input;
+            } catch (InputMismatchException e) {
+                System.out.print("Invalid input. Please enter a number: ");
+                scanner.nextLine(); // Clear invalid input
+            }
+        }
     }
 }
