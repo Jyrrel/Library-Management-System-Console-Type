@@ -4,7 +4,8 @@ import java.time.temporal.ChronoUnit;
 
 // Enum for Book Categories
 enum Category {
-    GENERAL_WORKS, PHILOSOPHY, RELIGION, SOCIAL_SCIENCES, LANGUAGE, SCIENCE, TECHNOLOGY, ARTS, LITERATURE, HISTORY_GEOGRAPHY
+    GENERAL_WORKS, PHILOSOPHY, RELIGION, SOCIAL_SCIENCES, LANGUAGE,
+    SCIENCE, TECHNOLOGY, ARTS, LITERATURE, HISTORY_GEOGRAPHY
 }
 
 // Book class to store book details
@@ -28,13 +29,13 @@ class Book {
     }
 
     void issueBook(int numCopies) {
-        if (isAvailable() && numCopies <= (copies - issuedCopies)) {
+        if (numCopies > 0 && isAvailable() && numCopies <= (copies - issuedCopies)) {
             issuedCopies += numCopies;
         }
     }
 
     void returnBook(int numCopies) {
-        if (issuedCopies >= numCopies) {
+        if (numCopies > 0 && issuedCopies >= numCopies) {
             issuedCopies -= numCopies;
         }
     }
@@ -50,6 +51,19 @@ class Book {
     @Override
     public String toString() {
         return "Title: " + title + ", Author: " + author + ", Category: " + category + ", Available Copies: " + getAvailableCopies();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof Book)) return false;
+        Book book = (Book) obj;
+        return title.equals(book.title) && author.equals(book.author);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(title, author);
     }
 }
 
@@ -71,10 +85,22 @@ class Student {
         } else {
             System.out.println("Books borrowed by " + name + ":");
             for (int i = 0; i < borrowedBooks.size(); i++) {
-                BorrowedBook borrowedBook = borrowedBooks.get(i);
-                System.out.println((i + 1) + ". " + borrowedBook);
+                System.out.println((i + 1) + ". " + borrowedBooks.get(i));
             }
         }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof Student)) return false;
+        Student student = (Student) obj;
+        return studentId.equals(student.studentId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(studentId);
     }
 }
 
@@ -133,17 +159,17 @@ public class LibraryManagementSystem {
 
             int choice = getIntInput();
             switch (choice) {
-                case 1: viewAvailableBooks(); break;
-                case 2: issueBook(); break;
-                case 3: returnBook(); break;
-                case 4: addNewBook(); break;
-                case 5: viewAllBorrowedBooks(); break;
-                case 6: viewAllStudents(); break;
-                case 7:
+                case 1 -> viewAvailableBooks();
+                case 2 -> issueBook();
+                case 3 -> returnBook();
+                case 4 -> addNewBook();
+                case 5 -> viewAllBorrowedBooks();
+                case 6 -> viewAllStudents();
+                case 7 -> {
                     System.out.println("Exiting Library Management System...");
                     return;
-                default:
-                    System.out.println("Invalid option. Please try again.");
+                }
+                default -> System.out.println("Invalid option. Please try again.");
             }
         }
     }
@@ -166,9 +192,7 @@ public class LibraryManagementSystem {
     }
 
     private static void returnBook() {
-        System.out.print("Enter your student ID: ");
-        String studentId = scanner.nextLine().trim();
-
+        String studentId = getLineInput("Enter your student ID: ");
         Student student = students.get(studentId);
         if (student == null) {
             System.out.println("Student not found.");
@@ -180,7 +204,6 @@ public class LibraryManagementSystem {
 
         System.out.print("Enter the number of the book you want to return: ");
         int bookIndex = getIntInput();
-
         if (bookIndex < 1 || bookIndex > student.borrowedBooks.size()) {
             System.out.println("Invalid book number.");
             return;
@@ -191,7 +214,6 @@ public class LibraryManagementSystem {
 
         System.out.print("Enter the number of copies to return: ");
         int copiesToReturn = getIntInput();
-
         if (copiesToReturn <= 0 || copiesToReturn > borrowedBook.numCopies) {
             System.out.println("Invalid number of copies.");
             return;
@@ -215,7 +237,6 @@ public class LibraryManagementSystem {
             System.out.println("No students registered yet.");
             return;
         }
-
         for (Student student : students.values()) {
             System.out.println("Student: " + student.name + " (ID: " + student.studentId + ")");
             student.listBorrowedBooks();
@@ -224,15 +245,13 @@ public class LibraryManagementSystem {
     }
 
     private static void addNewBook() {
-        System.out.print("Enter the book title: ");
-        String title = scanner.nextLine().trim();
+        String title = getLineInput("Enter the book title: ");
         if (title.isEmpty()) {
             System.out.println("Title cannot be empty.");
             return;
         }
 
-        System.out.print("Enter the author: ");
-        String author = scanner.nextLine().trim();
+        String author = getLineInput("Enter the author: ");
         if (author.isEmpty()) {
             System.out.println("Author cannot be empty.");
             return;
@@ -265,30 +284,40 @@ public class LibraryManagementSystem {
     private static void viewAllBorrowedBooks() {
         if (allBorrowedBooks.isEmpty()) {
             System.out.println("No books have been borrowed yet.");
-        } else {
-            System.out.println("\nAll Borrowed Books:");
-            for (BorrowedBook borrowedBook : allBorrowedBooks) {
-                System.out.println(borrowedBook);
+            return;
+        }
+
+        System.out.println("\nAll Borrowed Books:");
+        int totalFine = 0;
+        for (BorrowedBook borrowedBook : allBorrowedBooks) {
+            System.out.println(borrowedBook);
+            if (borrowedBook.isOverdue()) {
+                long overdueDays = ChronoUnit.DAYS.between(borrowedBook.returnDate, LocalDate.now());
+                totalFine += overdueDays * FINE_PER_DAY;
             }
         }
+        System.out.println("Total Potential Fines: ₱" + totalFine);
     }
 
     private static void issueBook() {
-        System.out.print("Enter your name: ");
-        String name = scanner.nextLine().trim();
+        if (books.isEmpty()) {
+            System.out.println("No books available to issue.");
+            return;
+        }
+
+        String name = getLineInput("Enter your name: ");
         if (name.isEmpty()) {
             System.out.println("Name cannot be empty.");
             return;
         }
 
-        System.out.print("Enter your student ID: ");
-        String studentId = scanner.nextLine().trim();
+        String studentId = getLineInput("Enter your student ID: ");
         if (studentId.isEmpty()) {
             System.out.println("Student ID cannot be empty.");
             return;
         }
 
-        Student student = students.getOrDefault(studentId, new Student(name, studentId));
+        final Student student = students.getOrDefault(studentId, new Student(name, studentId));
         students.putIfAbsent(studentId, student);
 
         viewAvailableBooks();
@@ -300,8 +329,7 @@ public class LibraryManagementSystem {
             return;
         }
 
-        Book selectedBook = books.get(bookIndex - 1);
-
+        final Book selectedBook = books.get(bookIndex - 1);
         if (!selectedBook.isAvailable()) {
             System.out.println("This book is currently not available.");
             return;
@@ -309,7 +337,6 @@ public class LibraryManagementSystem {
 
         System.out.print("Enter number of copies to borrow: ");
         int numCopies = getIntInput();
-
         if (numCopies <= 0 || numCopies > selectedBook.getAvailableCopies()) {
             System.out.println("Invalid number of copies.");
             return;
@@ -317,14 +344,13 @@ public class LibraryManagementSystem {
 
         System.out.print("Enter number of days to borrow: ");
         int days = getIntInput();
-
         if (days <= 0) {
             System.out.println("Borrow duration must be positive.");
             return;
         }
 
         selectedBook.issueBook(numCopies);
-        BorrowedBook borrowedBook = new BorrowedBook(selectedBook, numCopies, LocalDate.now(), days, student);
+        final BorrowedBook borrowedBook = new BorrowedBook(selectedBook, numCopies, LocalDate.now(), days, student);
         student.borrowedBooks.add(borrowedBook);
         allBorrowedBooks.add(borrowedBook);
 
@@ -342,5 +368,10 @@ public class LibraryManagementSystem {
                 scanner.nextLine(); // Clear invalid input
             }
         }
+    }
+
+    private static String getLineInput(String prompt) {
+        System.out.print(prompt);
+        return scanner.nextLine().trim();
     }
 }
